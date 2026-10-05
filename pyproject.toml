@@ -1,0 +1,36 @@
+[project]
+name = "alpr-system"
+version = "0.1.0"
+description = "High-Performance ALPR (Automatic License Plate Recognition) Service System"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fast-alpr[onnx]>=0.4.0",
+    "fastapi[standard]>=0.115.0",
+    "numpy>=2.4.6",
+    "opencv-python-headless>=5.0.0.93",
+    "pydantic-settings>=2.15.0",
+    "python-multipart>=0.0.32",
+    "uvicorn>=0.54.0",
+]
+
+[project.scripts]
+dev = "app.main:start_dev"
+start = "app.main:start_prod"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+[tool.basedpyright]
+stubPath = "typings"
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.0",
+    "pytest>=9.1.1",
+    "ruff>=0.16.10",
+]
