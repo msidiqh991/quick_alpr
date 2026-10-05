@@ -12,3 +12,10 @@ wheels/
 
 # Others
 .ruff_cache
+
+# Local ALPR regression data
+tests/fixtures/real/**/*.jpg
+tests/fixtures/real/**/*.jpeg
+tests/fixtures/real/**/*.png
+tests/fixtures/real/**/*.webp
+tests/fixtures/expected/*.local.json

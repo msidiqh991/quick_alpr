@@ -13,7 +13,16 @@ ENV UV_COMPILE_BYTECODE=1 \
     PATH="/opt/venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
     HF_HOME=/app/.cache/huggingface \
-    TORCH_HOME=/app/.cache/torch
+    TORCH_HOME=/app/.cache/torch \
+    ALPR_APP_TITLE="ALPR Service" \
+    ALPR_HOST=0.0.0.0 \
+    ALPR_PORT=8001 \
+    ALPR_RELOAD=false \
+    ALPR_RELOAD_DIR=app \
+    ALPR_DOCS_ENABLED=false \
+    ALPR_DETECTOR_MODEL=yolo-v9-t-640-license-plate-end2end \
+    ALPR_OCR_MODEL=cct-xs-v2-global-model \
+    ALPR_MAX_UPLOAD_MB=5
 
 WORKDIR /app
 
@@ -26,7 +35,6 @@ COPY app ./app
 COPY README.md ./
 RUN uv sync --frozen --no-dev
 
-RUN python -c "from app import config; from fast_alpr import ALPR; ALPR(detector_model=config.DETECTOR_MODEL, ocr_model=config.OCR_MODEL, ocr_device='cpu')"
 RUN chown -R appuser:appuser /app /opt/venv
 
 USER appuser

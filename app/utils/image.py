@@ -15,6 +15,6 @@ def decode_image(data: bytes) -> BgrImage:
     img = cv2.imdecode(buffer, cv2.IMREAD_COLOR)
 
     if img is None:
-        raise ValueError("Failed to decode image, data: " + str(data))
+        raise ValueError("Failed to decode image")
 
     return numpy.ascontiguousarray(img, dtype=numpy.uint8)

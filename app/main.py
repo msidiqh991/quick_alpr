@@ -19,9 +19,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
 app = FastAPI(
     title=settings.app_title,
     lifespan=lifespan,
-    docs_url=settings.docs_url,
-    redoc_url=settings.redoc_url,
-    openapi_url=settings.openapi_url,
+    docs_url=settings.docs_url if settings.docs_enabled else None,
+    redoc_url=settings.redoc_url if settings.docs_enabled else None,
+    openapi_url=settings.openapi_url if settings.docs_enabled else None,
 )
 app.include_router(api_router)
 

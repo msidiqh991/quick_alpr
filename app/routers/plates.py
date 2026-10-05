@@ -34,7 +34,13 @@ def recognize_plates(
             detail="Ukuran gambar melebihi batas",
         )
 
-    img = decode_image(data)
+    try:
+        img = decode_image(data)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail="File tidak dapat dibaca sebagai gambar",
+        ) from exc
 
     height: int = img.shape[0]
     width: int = img.shape[1]

@@ -37,10 +37,12 @@ class PlateRecognizer:
                 continue
 
             bb = r.detection.bounding_box
+            raw_text = r.ocr.text
 
             plates.append(
                 LicensePlate(
-                    plate_number=r.ocr.text.replace("_", ""),
+                    plate_number=raw_text.replace("_", ""),
+                    raw_text=raw_text,
                     plate_confidence=_mean(r.ocr.confidence),
                     detection_confidence=float(r.detection.confidence),
                     bbox=BoundingBox(
