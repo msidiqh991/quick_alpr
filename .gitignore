@@ -14,8 +14,15 @@ wheels/
 .ruff_cache
 
 # Local ALPR regression data
+tests/fixtures/synthetic/*
+!tests/fixtures/synthetic/.gitkeep
 tests/fixtures/real/**/*.jpg
 tests/fixtures/real/**/*.jpeg
 tests/fixtures/real/**/*.png
 tests/fixtures/real/**/*.webp
 tests/fixtures/expected/*.local.json
+
+# Downloaded datasets are local manual-test assets
+datasets/*
+!datasets/README.md
+!datasets/scripts.py
