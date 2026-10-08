@@ -29,14 +29,14 @@ Kaggle token in this repository or commit it to Git.
 Download the detection subset for end-to-end manual API testing:
 
 ```bash
-uv run python datasets/scripts.py
+uv run python datasets/scripts.py --limit 20
 ```
 
 Download another subset:
 
 ```bash
-uv run python datasets/scripts.py --subset text
-uv run python datasets/scripts.py --subset all
+uv run python datasets/scripts.py --subset text --limit 20
+uv run python datasets/scripts.py --subset all --limit 20
 ```
 
 Preview the first five OCR labels through the Pandas dataset adapter:
@@ -44,14 +44,19 @@ Preview the first five OCR labels through the Pandas dataset adapter:
 ```bash
 uv run python datasets/scripts.py \
   --subset text \
+  --limit 20 \
   --preview-labels
 ```
 
 Force a fresh download:
 
 ```bash
-uv run python datasets/scripts.py --force
+uv run python datasets/scripts.py --limit 20 --force
 ```
+
+`--limit` is required and counts image files, not annotation or label files.
+The downloader requests each selected image individually, so it does not fetch
+the complete subset before applying the limit.
 
 The default detection subset is the most relevant choice for this service
 because its images exercise both plate detection and OCR. The text subset is
