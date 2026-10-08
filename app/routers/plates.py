@@ -1,9 +1,10 @@
 from time import perf_counter
 from typing import Annotated
 
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, File, UploadFile
 
 from app.core.config import settings
+from app.core.errors import ImageTooLargeError
 from app.dependencies import PlateRecognizerDep
 from app.schemas import ImageMetadata, RecognitionData, RecognizeResult
 from app.utils.image import decode_image
@@ -18,33 +19,23 @@ router = APIRouter(prefix="/plates", tags=["Plates"])
     responses={
         413: {"description": "Image size exceeds limit"},
         422: {"description": "Invalid or unreadable image"},
+        500: {"description": "Plate recognition inference failed"},
     },
 )
-def recognize_plates(
+
+def recognize_plate_upload(
     image: Annotated[UploadFile, File(description="Image file to recognize")],
     recognizer: PlateRecognizerDep,
 ) -> RecognizeResult:
     started_at = perf_counter()
-
     data = image.file.read(settings.max_upload_bytes + 1)
 
     if len(data) > settings.max_upload_bytes:
-        raise HTTPException(
-            status_code=413,
-            detail="Ukuran gambar melebihi batas",
-        )
+        raise ImageTooLargeError
 
-    try:
-        img = decode_image(data)
-    except ValueError as exc:
-        raise HTTPException(
-            status_code=422,
-            detail="File tidak dapat dibaca sebagai gambar",
-        ) from exc
-
+    img = decode_image(data)
     height: int = img.shape[0]
     width: int = img.shape[1]
-
     plates = recognizer.recognize(img)
 
     return RecognizeResult(

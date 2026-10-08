@@ -5,6 +5,12 @@ import uvicorn
 from fastapi import FastAPI
 
 from app.core.config import settings
+from app.core.errors import ImageTooLargeError, InvalidImageError
+from app.core.exception_handlers import (
+    image_too_large_handler,
+    invalid_image_handler,
+    unhandled_exception_handler,
+)
 from app.routers import api_router
 from app.services import PlateRecognizer
 
@@ -23,6 +29,11 @@ app = FastAPI(
     redoc_url=settings.redoc_url if settings.docs_enabled else None,
     openapi_url=settings.openapi_url if settings.docs_enabled else None,
 )
+app.add_exception_handler(ImageTooLargeError, image_too_large_handler)
+app.add_exception_handler(InvalidImageError, invalid_image_handler)
+app.add_exception_handler(Exception, unhandled_exception_handler)
+
+# Route Registers
 app.include_router(api_router)
 
 

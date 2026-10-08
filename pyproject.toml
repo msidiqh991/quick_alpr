@@ -30,7 +30,7 @@ stubPath = "typings"
 
 [dependency-groups]
 dev = [
-    "httpx>=0.28.0",
+    "httpx2>=2.13.1",
     "kagglehub[pandas-datasets]>=1.0.2",
     "pytest>=9.1.1",
     "ruff>=0.16.10",

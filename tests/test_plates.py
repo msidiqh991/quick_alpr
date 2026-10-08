@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import pytest
-from fastapi.testclient import TestClient
+from starlette.testclient import TestClient
 
 import app.services.plate_recognizer as plate_recognizer_module
 from app.core.config import settings
@@ -19,14 +19,26 @@ class FakeRecognizer:
         return self.plates
 
 
+class FailingRecognizer:
+    def recognize(self, img: object) -> list[LicensePlate]:
+        raise RuntimeError("Simulated inference failure")
+
+
 @pytest.fixture
 def make_client():
-    def _make(plates: list[LicensePlate] | None = None) -> TestClient:
+    def _make(
+        plates: list[LicensePlate] | None = None,
+        *,
+        raise_server_exceptions: bool = True,
+    ) -> TestClient:
         app.dependency_overrides[get_plate_recognizer] = (
             lambda: FakeRecognizer(plates)
         )
 
-        return TestClient(app)
+        return TestClient(
+            app,
+            raise_server_exceptions=raise_server_exceptions,
+        )
 
     yield _make
     app.dependency_overrides.clear()
@@ -111,7 +123,22 @@ def test_unreadable_image_is_422(make_client):
     response = _upload(make_client(), content=b"not-an-image")
 
     assert response.status_code == 422
-    assert response.json() == {"detail": "File tidak dapat dibaca sebagai gambar"}
+    assert response.json() == {
+        "detail": "File could not be decoded as an image"
+    }
+
+
+def test_inference_failure_is_logged_and_returns_500(make_client, caplog):
+    client = make_client(raise_server_exceptions=False)
+    app.dependency_overrides[get_plate_recognizer] = FailingRecognizer
+
+    response = _upload(client)
+
+    assert response.status_code == 500
+    assert response.json() == {
+        "detail": "An error occurred while processing the image"
+    }
+    assert "Unhandled ALPR service error" in caplog.text
 
 
 def test_recognizer_preserves_raw_ocr_text(monkeypatch):
