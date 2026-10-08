@@ -1,6 +1,6 @@
 from typing import Annotated, Protocol, TypeAlias, cast
 
-from fastapi import Depends, Request
+from fastapi import Depends, FastAPI, Request
 
 from app.services import PlateRecognizer
 
@@ -10,8 +10,9 @@ class AppState(Protocol):
 
 
 def get_plate_recognizer(request: Request) -> PlateRecognizer:
-    """Return singleton ALPR recognizer yang dibuat saat application startup."""
-    state = cast(AppState, request.app.state)
+    """Return the singleton recognizer created during application startup."""
+    application = cast(FastAPI, request.app)
+    state = cast(AppState, cast(object, application.state))
     return state.plate_recognizer
 
 
