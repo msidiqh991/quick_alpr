@@ -12,6 +12,7 @@ wheels/
 
 # Others
 .ruff_cache
+.pytest_cache
 
 # Local ALPR regression data
 tests/fixtures/synthetic/*
