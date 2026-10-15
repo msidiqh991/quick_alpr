@@ -1,13 +1,10 @@
 from time import perf_counter
-from typing import Annotated
+from typing import cast
 
-from fastapi import APIRouter, File, UploadFile
+from fastapi import APIRouter, Request
 
-from app.core.config import settings
-from app.core.errors import ImageTooLargeError
-from app.dependencies import PlateRecognizerDep
+from app.dependencies import AdmittedRuntimeDep, ValidatedUploadDep
 from app.schemas import ImageMetadata, RecognitionData, RecognizeResult
-from app.utils.image import decode_image
 
 router = APIRouter(prefix="/plates", tags=["Plates"])
 
@@ -19,34 +16,44 @@ router = APIRouter(prefix="/plates", tags=["Plates"])
     responses={
         413: {"description": "Image size exceeds limit"},
         422: {"description": "Invalid or unreadable image"},
+        503: {
+            "description": "Inference capacity is temporarily unavailable",
+            "headers": {
+                "Retry-After": {
+                    "description": "Seconds to wait before retrying",
+                    "schema": {"type": "integer"},
+                }
+            },
+        },
         500: {"description": "Plate recognition inference failed"},
     },
 )
-
-def recognize_plate_upload(
-    image: Annotated[UploadFile, File(description="Image file to recognize")],
-    recognizer: PlateRecognizerDep,
+async def recognize_plate_upload(
+    request: Request,
+    image: ValidatedUploadDep,
+    runtime: AdmittedRuntimeDep,
 ) -> RecognizeResult:
-    started_at = perf_counter()
-    data = image.file.read(settings.max_upload_bytes + 1)
-
-    if len(data) > settings.max_upload_bytes:
-        raise ImageTooLargeError
-
-    img = decode_image(data)
-    height: int = img.shape[0]
-    width: int = img.shape[1]
-    plates = recognizer.recognize(img)
+    fallback_started_at = perf_counter()
+    state_started_at = cast(
+        object,
+        getattr(request.state, "request_started_at", None),
+    )
+    started_at = (
+        float(state_started_at)
+        if isinstance(state_started_at, (int, float))
+        else fallback_started_at
+    )
+    inference = await runtime.run(image.data)
 
     return RecognizeResult(
         data=RecognitionData(
-            plates=plates,
-            processing_time=perf_counter() - started_at,
+            plates=list(inference.plates),
+            processing_time=max(0.0, perf_counter() - started_at),
             image=ImageMetadata(
                 filename=image.filename,
-                width=width,
-                height=height,
-                content_type=image.content_type or "application/octet-stream",
+                width=inference.width,
+                height=inference.height,
+                content_type=image.content_type,
             ),
         )
     )
