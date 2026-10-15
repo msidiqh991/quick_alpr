@@ -13,7 +13,7 @@ Source: [Indonesian Vehicle License Plate Dataset](https://www.kaggle.com/datase
 - Reported license: Apache 2.0
 - Reported size: approximately 1.48 GB for the complete dataset
 - Detection subset: 1,383 vehicle images with COCO annotations
-- Text subset: 1,863 cropped plate images with `label.csv`
+- Text subset: 1,863 labeled plate crops and full-vehicle images with `label.csv`
 
 Public datasets normally download without authentication. If Kaggle requires
 authentication or dataset consent, accept the dataset terms on its Kaggle page
@@ -36,17 +36,21 @@ Download another subset:
 
 ```bash
 uv run python datasets/scripts.py --subset text --limit 20
-uv run python datasets/scripts.py --subset all --limit 20
 ```
 
-Preview the first five OCR labels through the Pandas dataset adapter:
+Download text images and generate their local benchmark manifest:
 
 ```bash
 uv run python datasets/scripts.py \
   --subset text \
-  --limit 20 \
-  --preview-labels
+  --limit 50 \
+  --write-text-manifest
 ```
+
+Regenerate the manifest after updating the downloader or when an existing
+manifest does not contain the `input_kind` column. The generated manifest keeps
+all valid labeled rows and classifies each image as `plate_crop` or
+`full_vehicle`.
 
 Force a fresh download:
 
@@ -58,10 +62,53 @@ uv run python datasets/scripts.py --limit 20 --force
 The downloader requests each selected image individually, so it does not fetch
 the complete subset before applying the limit.
 
+Downloaded images use this canonical local layout, independent of the nested
+paths used by Kaggle:
+
+```text
+datasets/indonesian-plates/
+|-- detection/images/
+`-- text/
+    |-- ground-truth.csv  # Local, generated, ignored by Git
+    `-- images/
+```
+
 The default detection subset is the most relevant choice for this service
 because its images exercise both plate detection and OCR. The text subset is
-mostly useful for isolated OCR inspection because its images are already
-cropped around a plate.
+mostly useful for isolated OCR inspection. The OCR benchmark uses only rows
+classified as plate crops and reports how many full-vehicle images it excludes.
+
+Run the OCR benchmark after generating the manifest:
+
+```bash
+uv run python tests/benchmark_ocr.py
+```
+
+Validate the manifest without loading the OCR model:
+
+```bash
+uv run python tests/benchmark_ocr.py --validate-only
+```
+
+Compare OCR models without changing `.env`:
+
+```bash
+uv run python tests/benchmark_ocr.py --model cct-s-v2-global-model
+uv run python tests/benchmark_ocr.py --model global-plates-mobile-vit-v2-model
+```
+
+The benchmark performs one OCR pass per plate crop and reports the model name,
+status counts, OCR result count, Indonesian format validity, exact match,
+corpus character error rate, errors, and latency. It does not perform fuzzy
+matching or ambiguous character substitution. Full-vehicle rows remain in the
+manifest but are excluded from this crop-only benchmark.
+
+The generated manifest joins downloaded filenames with the official Kaggle
+label file. Labels that do not follow the regular Indonesian plate format are
+reported and omitted without preventing the CSV from being updated. Filenames
+that begin with the normalized expected plate followed by `.` or `_` are
+classified as full-vehicle images according to this dataset's naming
+convention.
 
 Review the current Kaggle dataset page and source terms before using the data.
 Do not treat the Git ignore rule as a substitute for access control or privacy
