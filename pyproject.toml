@@ -5,10 +5,12 @@ description = "High-Performance ALPR (Automatic License Plate Recognition) Servi
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "anyio>=4.15.1",
     "fast-alpr[onnx]>=0.4.0",
     "fastapi[standard]>=0.115.0",
     "numpy>=2.4.6",
     "opencv-python-headless>=5.0.0.93",
+    "pillow>=12.0",
     "pydantic-settings>=2.15.0",
     "python-multipart>=0.0.32",
     "uvicorn>=0.54.0",
