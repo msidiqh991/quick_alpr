@@ -26,7 +26,7 @@ def main() -> None:
     noise = random.integers(0, 256, size=shape, dtype=np.uint8)
     write_image("noise.png", noise)
 
-    (OUTPUT_DIR / "corrupt.jpg").write_bytes(b"not-an-image")
+    _ = (OUTPUT_DIR / "corrupt.jpg").write_bytes(b"not-an-image")
 
 
 if __name__ == "__main__":

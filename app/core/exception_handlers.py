@@ -30,8 +30,10 @@ async def unhandled_exception_handler(
     request: Request,
     exc: Exception,
 ) -> JSONResponse:
+    request_id = getattr(request.state, "request_id", "unknown")
     logger.error(
-        "Unhandled ALPR service error: method=%s path=%s",
+        "Unhandled ALPR service error: request_id=%s method=%s path=%s",
+        request_id,
         request.method,
         request.url.path,
         exc_info=(type(exc), exc, exc.__traceback__),
@@ -39,4 +41,5 @@ async def unhandled_exception_handler(
     return JSONResponse(
         status_code=500,
         content={"detail": "An error occurred while processing the image"},
+        headers={"X-Request-ID": str(request_id)},
     )

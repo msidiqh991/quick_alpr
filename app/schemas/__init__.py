@@ -6,4 +6,10 @@ from app.schemas.plates import (
     RecognizeResult,
 )
 
-__all__ = ["BoundingBox", "ImageMetadata", "LicensePlate", "RecognitionData", "RecognizeResult"]
+__all__ = [
+    "BoundingBox",
+    "ImageMetadata",
+    "LicensePlate",
+    "RecognitionData",
+    "RecognizeResult",
+]
